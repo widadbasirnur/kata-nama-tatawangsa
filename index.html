@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Interaktif: Kata Nama Am, Khas & Ganti Diri</title>
+    <!-- Google Fonts & Confetti Library -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        .header {
+            background: #4e54c8;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .sound-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Poppins', sans-serif;
+            transition: background 0.2s;
+        }
+        .sound-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .quiz-body {
+            padding: 30px;
+        }
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95rem;
+        }
+        .question-box {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .option-btn {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 15px 20px;
+            text-align: left;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #495057;
+        }
+        .option-btn:hover:not(:disabled) {
+            background: #e0e7ff;
+            border-color: #6366f1;
+            color: #4338ca;
+            transform: translateY(-2px);
+        }
+        .option-btn.correct {
+            background: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #065f46 !important;
+        }
+        .option-btn.wrong {
+            background: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #991b1b !important;
+        }
+        .explanation-box {
+            background: #f0fdf4;
+            border-left: 5px solid #22c55e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            color: #166534;
+            display: none;
+        }
+        .next-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: none;
+        }
+        .next-btn:hover {
+            background: #4338ca;
+        }
+        .result-screen {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .result-screen h2 {
+            font-size: 2rem;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 15px;
+        }
+        .result-message {
+            font-size: 1.1rem;
+            color: #4b5563;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .restart-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .restart-btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <button class="sound-btn" id="soundToggle" onclick="toggleSound()">🔊 Muzik: Tutup</button>
+            <h1>Kuiz Bahasa Melayu</h1>
+            <p>Kata Nama Am, Kata Nama Khas & Kata Nama Ganti Diri</p>
+        </div>
+
+        <div class="quiz-body" id="quizBody">
+            <div class="progress-bar">
+                <span id="questionCount">Soalan 1 dari 10</span>
+                <span id="scoreTracker">Skor: 0</span>
+            </div>
+
+            <div class="question-box" id="questionText">
+                Soalan akan dipaparkan di sini...
+            </div>
+
+            <div class="options-list" id="optionsList">
+                <!-- Pilihan jawapan akan dimasukkan melalui JavaScript -->
+            </div>
+
+            <div class="explanation-box" id="explanationBox">
+                <strong>Penerangan:</strong> <span id="explanationText"></span>
+            </div>
+
+            <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Seterusnya ➔</button>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <h2>Tahniah! Kuiz Selesai 🎉</h2>
+            <div class="score-display" id="finalScore">0/10</div>
+            <p class="result-message" id="resultMessage">Anda telah menyiapkan kuiz ini dengan jayanya.</p>
+            <button class="restart-btn" onclick="restartQuiz()">Cuba Semula 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        // Data Soalan Kuiz Lengkap 10 Soalan
+        const questions = [
+            {
+                question: "1. Antara berikut, yang manakah merupakan Kata Nama Khas?",
+                options: ["A. Buku cerita", "B. Kereta mewah", "C. Sungai yang panjang", "D. Proton Saga"],
+                answer: 3,
+                explanation: "Proton Saga ialah Kata Nama Khas kerana merujuk kepada nama jenama kenderaan tertentu dan ditulis dengan huruf besar pada awal kata. Pilihan A, B, dan C adalah Kata Nama Am."
+            },
+            {
+                question: "2. Ibu membeli sebiji kek coklat sempena hari jadi _________.\nPilih nama orang yang paling sesuai untuk tempat kosong di atas.",
+                options: ["A. abang", "B. cikgu", "C. Ali", "D. doktor"],
+                answer: 2,
+                explanation: "Ali ialah Kata Nama Khas bagi manusia (nama individu tertentu). Pilihan A, B, dan D ialah Kata Nama Am kerana merujuk kepada gelaran atau jawatan secara umum."
+            },
+            {
+                question: "3. Pilih ayat yang menggunakan Kata Nama Am dengan betul dan tepat.",
+                options: [
+                    "A. Murid-murid itu sedang bermain bola di padang.",
+                    "B. Encik Lim berasal dari Bandaraya Melaka Bersejarah.",
+                    "C. Harimau Malaya ialah lambang negara kita.",
+                    "D. Kami melawat Zoo Negara pada minggu lalu."
+                ],
+                answer: 0,
+                explanation: "Perkataan murid-murid, bola, dan padang dalam pilihan A adalah Kata Nama Am. Pilihan B, C, dan D mengandungi unsur Kata Nama Khas."
+            },
+            {
+                question: "4. Manakah padanan yang betul antara Kata Nama Am dan Kata Nama Khas?",
+                options: ["A. Kucing - Tompok", "B. Negara - Malaysia", "C. Hari - Isnin", "D. Semua di atas betul"],
+                answer: 3,
+                explanation: "Semua pasangan di atas adalah tepat kerana menggandingkan Kata Nama Am dengan Kata Nama Khas yang betul dan bertulis huruf besar."
+            },
+            {
+                question: "5. Antara berikut, pasangan perkataan yang manakah kedua-duanya adalah Kata Nama Am?",
+                options: ["A. Sekolah - SK Seri Indah", "B. Penulis - Kerani", "C. Negara - Jepun", "D. Bulan - Julai"],
+                answer: 1,
+                explanation: "Penulis dan kerani kedua-duanya adalah Kata Nama Am (gelaran/jawatan secara umum). Pilihan lain mempunyai campuran Kata Nama Khas."
+            },
+            {
+                question: '6. "\"_________ berasa sangat gembira kerana berjaya memenangi pertandingan melukis itu,\" kata Amin kepada Cikgu Siti.\nPilih Kata Nama Ganti Diri Pertama yang betul.',
+                options: ["A. Dia", "B. Kami", "C. Saya", "D. Mereka"],
+                answer: 2,
+                explanation: "Saya ialah Kata Nama Ganti Diri Pertama yang digunakan oleh seseorang untuk merujuk kepada diri sendiri semasa bercakap."
+            },
+            {
+                question: '7. "\"Bolehkah _________ tolong saya membawa buku-buku latihan ini ke bilik guru?\" tanya Amirul kepada Azman.\nPilih Kata Nama Ganti Diri Kedua yang paling tepat.',
+                options: ["A. awak", "B. dia", "C. mereka", "D. beta"],
+                answer: 0,
+                explanation: "Awak ialah Kata Nama Ganti Diri Kedua yang digunakan untuk bercakap dengan rakan sebaya atau orang kedua yang dilawan bercakap."
+            },
+            {
+                question: '8. "\"Ali dan Abu tidak hadir ke sekolah hari ini kerana _________ demam,\" kata ketua kelas kepada Cikgu Ali.\nPilih Kata Nama Ganti Diri Ketiga yang sesuai.',
+                options: ["A. kami", "B. kita", "C. mereka", "D. engkau"],
+                answer: 2,
+                explanation: "Mereka ialah Kata Nama Ganti Diri Ketiga yang digunakan untuk merujuk kepada dua orang atau lebih yang diperkatakan (Ali dan Abu)."
+            },
+            {
+                question: '9. "\"Perkhemahan unit beruniform itu akan diadakan di _________ pada cuti sekolah nanti.\"\nPilih nama tempat khusus (Kata Nama Khas) yang betul.',
+                options: ["A. sekolah", "B. hutan", "C. Kem Wawasan", "D. perkhemahan"],
+                answer: 2,
+                explanation: "Kem Wawasan ialah Kata Nama Khas kerana merujuk kepada nama kem atau tempat tertentu secara khusus. Pilihan lain adalah Kata Nama Am."
+            },
+            {
+                question: "10. Antara ayat berikut, yang manakah menggunakan Kata Nama Ganti Diri Kedua dengan betul?",
+                options: [
+                    "A. \"Bilakah engkau akan pulang ke kampung, Badri?\" tanya Ali.",
+                    "B. \"Saya suka membaca buku cerita di perpustakaan,\" kata Amin.",
+                    "C. \"Mereka sedang bermain bola sepak di padang,\" kata guru itu.",
+                    "D. \"Dia seorang murid yang sangat rajin,\" puji Cikgu Siti."
+                ],
+                answer: 0,
+                explanation: "Perkataan engkau dalam pilihan A ialah Kata Nama Ganti Diri Kedua. Pilihan B menggunakan Ganti Diri Pertama (Saya), manakala C dan D menggunakan Ganti Diri Ketiga (Mereka, Dia)."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+        let soundEnabled = false;
+        let audioCtx = null;
+
+        // Web Audio API untuk bunyi kesan dan melodi ringkas
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, type, duration, delay = 0) {
+            if (!soundEnabled) return;
+            initAudio();
+            setTimeout(() => {
+                try {
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch(e) {}
+            }, delay);
+        }
+
+        function playCorrectSound() {
+            playTone(523.25, 'sine', 0.15, 0);    // C5
+            playTone(659.25, 'sine', 0.15, 150);  // E5
+            playTone(783.99, 'sine', 0.3, 300);   // G5
+        }
+
+        function playWrongSound() {
+            playTone(220, 'sawtooth', 0.2, 0);    // A3
+            playTone(185, 'sawtooth', 0.3, 200);  // F#3
+        }
+
+        function playVictoryFanfare() {
+            playTone(523.25, 'sine', 0.2, 0);
+            playTone(523.25, 'sine', 0.2, 200);
+            playTone(523.25, 'sine', 0.2, 400);
+            playTone(659.25, 'sine', 0.6, 600);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            let btn = document.getElementById('soundToggle');
+            if (soundEnabled) {
+                initAudio();
+                btn.innerHTML = "🔊 Muzik: Pasang";
+                playTone(440, 'sine', 0.1);
+            } else {
+                btn.innerHTML = "🔇 Muzik: Tutup";
+            }
+        }
+
+        function loadQuestion() {
+            answered = false;
+            let q = questions[currentQuestion];
+            document.getElementById('questionCount').innerText = `Soalan ${currentQuestion + 1} dari ${questions.length}`;
+            document.getElementById('scoreTracker').innerText = `Skor: ${score}`;
+            document.getElementById('questionText').innerText = q.question;
+            
+            let optionsList = document.getElementById('optionsList');
+            optionsList.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(index);
+                optionsList.appendChild(btn);
+            });
+
+            document.getElementById('explanationBox').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function selectOption(selectedIndex) {
+            if (answered) return;
+            answered = true;
+
+            let q = questions[currentQuestion];
+            let buttons = document.getElementsByClassName('option-btn');
+
+            if (selectedIndex === q.answer) {
+                buttons[selectedIndex].classList.add('correct');
+                score++;
+                playCorrectSound();
+                confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+            } else {
+                buttons[selectedIndex].classList.add('wrong');
+                buttons[q.answer].classList.add('correct');
+                playWrongSound();
+            }
+
+            document.getElementById('scoreTracker').innerText = `Skor: ${score}`;
+            document.getElementById('explanationText').innerText = q.explanation;
+            document.getElementById('explanationBox').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'block';
+
+            for (let btn of buttons) {
+                btn.disabled = true;
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizBody').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'block';
+            document.getElementById('finalScore').innerText = `${score}/10`;
+            
+            let msg = "";
+            if (score === 10) {
+                msg = "Hebat sekali! Anda memang pakar dalam tajuk Kata Nama Am, Khas, dan Ganti Diri!";
+            } else if (score >= 7) {
+                msg = "Syabas! Prestasi yang sangat baik. Teruskan usaha cemerlang anda!";
+            } else {
+                msg = "Bagus, tetapi anda boleh cuba sekali lagi untuk mendapatkan keputusan yang lebih mantap!";
+            }
+            document.getElementById('resultMessage').innerText = msg;
+            playVictoryFanfare();
+            
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('quizBody').style.display = 'block';
+            document.getElementById('resultScreen').style.display = 'none';
+            loadQuestion();
+        }
+
+        // Mulakan kuiz apabila muat turun halaman selesai
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
